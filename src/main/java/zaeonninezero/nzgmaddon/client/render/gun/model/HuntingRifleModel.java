@@ -5,6 +5,9 @@ import com.mojang.math.Vector3f;
 import com.mrcrayfish.guns.common.Gun;
 import com.mrcrayfish.guns.GunMod;
 import com.mrcrayfish.guns.client.GunModel;
+import com.mrcrayfish.guns.client.handler.GunRenderingHandler;
+import com.mrcrayfish.guns.client.handler.ReloadHandler;
+
 import zaeonninezero.nzgmaddon.client.SpecialModels;
 import com.mrcrayfish.guns.client.render.gun.IOverrideModel;
 import com.mrcrayfish.guns.client.util.GunAnimationHelper;
@@ -15,6 +18,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemCooldowns;
@@ -28,20 +32,28 @@ import javax.annotation.Nullable;
  * Modified by zaeonNineZero for Nine Zero's Gun Expansion
  * Attachment detection logic based off of code from Mo' Guns by Bomb787 and AlanorMiga (MigaMi)
  */
-public class HuntingShotgunModel implements IOverrideModel
+public class HuntingRifleModel implements IOverrideModel
 {
 	private boolean disableAnimations = false;
 	
     @Override
-	// This class renders a multi-part model that supports animations and removeable parts.
- 	// We'll render the non-moving/static parts first, then render the animated parts.
+    // This class renders a multi-part model that supports animations and removeable parts.
 	
-	// We start by declaring our render function that will handle rendering the core baked model (which is a non-moving part).
+ 	// Declare our render function that will handle rendering all model components.
     public void render(float partialTicks, ItemTransforms.TransformType transformType, ItemStack stack, ItemStack parent, @Nullable LivingEntity entity, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay)
     {
 		// Render the item's BakedModel, which will serve as the core of our custom model.
-        BakedModel bakedModel = SpecialModels.HUNTING_SHOTGUN_BASE.getModel();
+        BakedModel bakedModel = SpecialModels.HUNTING_RIFLE_BASE.getModel();
         Minecraft.getInstance().getItemRenderer().render(stack, ItemTransforms.TransformType.NONE, false, poseStack, buffer, light, overlay, GunModel.wrap(bakedModel));
+
+		// Render the iron sights element, which is only present when a scope is not attached.
+		// We have to grab the gun's scope attachment slot and check whether it is empty or not.
+		// If the isEmpty function returns true, then we render the iron sights.
+		ItemStack attachmentStack = Gun.getAttachment(IAttachment.Type.SCOPE, stack);
+        if(attachmentStack.isEmpty())
+		{
+            RenderUtil.renderModel(SpecialModels.HUNTING_RIFLE_SIGHTS.getModel(), transformType, null, stack, parent, poseStack, buffer, light, overlay);
+		}
         
         // Special animated segment for compat with the CGM Expanded fork.
         // First, some variables for animation building
@@ -50,7 +62,8 @@ public class HuntingShotgunModel implements IOverrideModel
         boolean correctContext = (transformType.firstPerson() || transformType == ItemTransforms.TransformType.THIRD_PERSON_RIGHT_HAND || transformType == ItemTransforms.TransformType.THIRD_PERSON_LEFT_HAND);
         boolean useFallbackAnimation = false;
         
-        Vec3 pumpTranslations = Vec3.ZERO;
+        Vec3 breechRotations = Vec3.ZERO;
+        Vec3 breechRotOffset = Vec3.ZERO;
         
         Vec3 bulletTranslations = Vec3.ZERO;
         Vec3 bulletRotations = Vec3.ZERO;
@@ -61,13 +74,14 @@ public class HuntingShotgunModel implements IOverrideModel
         	try {
     				Player player = (Player) entity;
     				
-        			pumpTranslations = GunAnimationHelper.getSmartAnimationTrans(stack, player, partialTicks, "pump");
+        			breechRotations = GunAnimationHelper.getSmartAnimationRot(stack, player, partialTicks, "breech");
+        			breechRotOffset = GunAnimationHelper.getSmartAnimationRotOffset(stack, player, partialTicks, "breech");
         			
         	        bulletTranslations = GunAnimationHelper.getSmartAnimationTrans(stack, player, partialTicks, "bullet");
         	        bulletRotations = GunAnimationHelper.getSmartAnimationRot(stack, player, partialTicks, "bullet");
         	        bulletRotOffset = GunAnimationHelper.getSmartAnimationRotOffset(stack, player, partialTicks, "bullet");
 
-        	    	if(!GunAnimationHelper.hasAnimation("fire", stack) && GunAnimationHelper.getSmartAnimationType(stack, player, partialTicks)=="fire")
+        	    	if(!GunAnimationHelper.hasAnimation("reload", stack))
         	    	useFallbackAnimation = true;
         		}
 	    		catch(NoClassDefFoundError ignored) {
@@ -85,44 +99,42 @@ public class HuntingShotgunModel implements IOverrideModel
         {
 	        if(isPlayer && correctContext)
 	        {
-	            float cooldownDivider = 3.7F;
-	            float cooldownOffset1 = 0.7F;
-	            float intensity = 3.6F +1;
-	            
-	        	ItemCooldowns tracker = Minecraft.getInstance().player.getCooldowns();
-	            float cooldown = tracker.getCooldownPercent(stack.getItem(), Minecraft.getInstance().getFrameTime());
-	            cooldown *= cooldownDivider;
-	            float cooldown_a = cooldown-cooldownOffset1;
-	
-	            float cooldown_b = Math.min(Math.max(cooldown_a*intensity,0),1);
-	            float cooldown_c = Math.min(Math.max((-cooldown_a*intensity)+intensity,0),1);
-	            float cooldown_d = Math.min(cooldown_b,cooldown_c);
-	            
-	            pumpTranslations = new Vec3(0, 0, cooldown_d * 1.8);
+	        	breechRotOffset = new Vec3(0,-5.45,4.3);
+	            breechRotations = new Vec3(25 * ReloadHandler.get().getReloadProgress(partialTicks),0,0);
 	        }
         }
 
-		// Pump Shotgun slide. This animated part cycles backward then forward after firing.
+		// Hunting Rifle breech. This animated part opens while reloading.
 		// Push pose so we can make do transformations without affecting the models above.
         poseStack.pushPose();
-		// Now we apply our transformations. We will ONLY do so if a grip is not attached.
-		ItemStack gripStack = Gun.getAttachment(IAttachment.Type.UNDER_BARREL, stack);
-        if(isPlayer && (gripStack.isEmpty() || !disableAnimations))
-        poseStack.translate(0, 0, pumpTranslations.z * 0.0625);
-		// Our transformations are done - now we can render the model.
-        RenderUtil.renderModel(SpecialModels.HUNTING_SHOTGUN_PUMP.getModel(), transformType, null, stack, parent, poseStack, buffer, light, overlay);
+		// Apply the transformations
+        if(isPlayer && isFirstPerson)
+        {
+        	if(breechRotations!=Vec3.ZERO)
+        	{
+        		if (!disableAnimations)
+        			GunAnimationHelper.rotateAroundOffset(poseStack, breechRotations, breechRotOffset);
+        		else
+        		{
+        			poseStack.translate(-breechRotOffset.x * 0.0625, breechRotOffset.y * 0.0625, breechRotOffset.z * 0.0625);
+        	    	poseStack.mulPose(Vector3f.XP.rotationDegrees((float) breechRotations.x));
+        	    	poseStack.translate(breechRotOffset.x * 0.0625, -breechRotOffset.y * 0.0625, -breechRotOffset.z * 0.0625);
+        		}
+        	}
+    	}
+		// Render the model.
+        RenderUtil.renderModel(SpecialModels.HUNTING_RIFLE_BREECH.getModel(), transformType, null, stack, parent, poseStack, buffer, light, overlay);
 		// Pop pose to compile everything in the render matrix.
         poseStack.popPose();
         
-        // SG Shell, which is only used during custom reload animations.
-        if(!disableAnimations && !useFallbackAnimation)
+        // Advanced Bullet, which is only used during custom reload animations.
+        if(!disableAnimations && !useFallbackAnimation && (isPlayer && isFirstPerson))
         {
     		// Push pose so we can make do transformations without affecting the models above.
             poseStack.pushPose();
             // Initial translation to the starting position.
-            poseStack.translate(0.0, -5.15*0.0625, 2.2*0.0625);
+            poseStack.translate(0.0, -3.85*0.0625, 4.8*0.0625);
             // Apply the transformations
-            if(isPlayer && isFirstPerson)
             {
             	if(bulletTranslations!=Vec3.ZERO)
                 	poseStack.translate(bulletTranslations.x*0.0625, bulletTranslations.y*0.0625, bulletTranslations.z*0.0625);
@@ -130,7 +142,7 @@ public class HuntingShotgunModel implements IOverrideModel
                     GunAnimationHelper.rotateAroundOffset(poseStack, bulletRotations, bulletRotOffset);
         	}
     		// Render the model.
-            RenderUtil.renderModel(SpecialModels.SG_SHELL_LOADED.getModel(), transformType, null, stack, parent, poseStack, buffer, light, overlay);
+            RenderUtil.renderModel(SpecialModels.ADVANCED_BULLET_LOADED.getModel(), transformType, null, stack, parent, poseStack, buffer, light, overlay);
     		// Pop pose to compile everything in the render matrix.
             poseStack.popPose();
         }

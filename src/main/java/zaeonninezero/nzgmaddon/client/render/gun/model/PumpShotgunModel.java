@@ -63,11 +63,15 @@ public class PumpShotgunModel implements IOverrideModel
         // Special animated segment for compat with the CGM Expanded fork.
         // First, some variables for animation building
         boolean isPlayer = entity != null && entity.equals(Minecraft.getInstance().player);
-        //boolean isFirstPerson = (transformType.firstPerson());
+        boolean isFirstPerson = (transformType.firstPerson());
         boolean correctContext = (transformType.firstPerson() || transformType == ItemTransforms.TransformType.THIRD_PERSON_RIGHT_HAND || transformType == ItemTransforms.TransformType.THIRD_PERSON_LEFT_HAND);
         boolean useFallbackAnimation = false;
         
         Vec3 pumpTranslations = Vec3.ZERO;
+        
+        Vec3 bulletTranslations = Vec3.ZERO;
+        Vec3 bulletRotations = Vec3.ZERO;
+        Vec3 bulletRotOffset = Vec3.ZERO;
         
         if(isPlayer && correctContext && !disableAnimations)
         {
@@ -75,6 +79,10 @@ public class PumpShotgunModel implements IOverrideModel
     				Player player = (Player) entity;
     				
         			pumpTranslations = GunAnimationHelper.getSmartAnimationTrans(stack, player, partialTicks, "pump");
+        			
+        	        bulletTranslations = GunAnimationHelper.getSmartAnimationTrans(stack, player, partialTicks, "bullet");
+        	        bulletRotations = GunAnimationHelper.getSmartAnimationRot(stack, player, partialTicks, "bullet");
+        	        bulletRotOffset = GunAnimationHelper.getSmartAnimationRotOffset(stack, player, partialTicks, "bullet");
 
         	    	if(!GunAnimationHelper.hasAnimation("fire", stack) && GunAnimationHelper.getSmartAnimationType(stack, player, partialTicks)=="fire")
         	    	useFallbackAnimation = true;
@@ -122,6 +130,27 @@ public class PumpShotgunModel implements IOverrideModel
         RenderUtil.renderModel(SpecialModels.PUMP_SHOTGUN_PUMP.getModel(), transformType, null, stack, parent, poseStack, buffer, light, overlay);
 		// Pop pose to compile everything in the render matrix.
         poseStack.popPose();
+        
+        // SG Shell, which is only used during custom reload animations.
+        if(!disableAnimations && !useFallbackAnimation)
+        {
+    		// Push pose so we can make do transformations without affecting the models above.
+            poseStack.pushPose();
+            // Initial translation to the starting position.
+            poseStack.translate(0.0, -5.15*0.0625, 2.2*0.0625);
+            // Apply the transformations
+            if(isPlayer && isFirstPerson)
+            {
+            	if(bulletTranslations!=Vec3.ZERO)
+                	poseStack.translate(bulletTranslations.x*0.0625, bulletTranslations.y*0.0625, bulletTranslations.z*0.0625);
+                if(bulletRotations!=Vec3.ZERO)
+                    GunAnimationHelper.rotateAroundOffset(poseStack, bulletRotations, bulletRotOffset);
+        	}
+    		// Render the model.
+            RenderUtil.renderModel(SpecialModels.SG_SHELL_LOADED.getModel(), transformType, null, stack, parent, poseStack, buffer, light, overlay);
+    		// Pop pose to compile everything in the render matrix.
+            poseStack.popPose();
+        }
     }
     
     //NBT fetch code for skin variants - ported from the "hasAmmo" function under common/Gun.java

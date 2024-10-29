@@ -5,6 +5,9 @@ import com.mojang.math.Vector3f;
 import com.mrcrayfish.guns.common.Gun;
 import com.mrcrayfish.guns.GunMod;
 import com.mrcrayfish.guns.client.GunModel;
+import com.mrcrayfish.guns.client.handler.GunRenderingHandler;
+import com.mrcrayfish.guns.client.handler.ReloadHandler;
+
 import zaeonninezero.nzgmaddon.client.SpecialModels;
 import com.mrcrayfish.guns.client.render.gun.IOverrideModel;
 import com.mrcrayfish.guns.client.util.GunAnimationHelper;
@@ -77,6 +80,12 @@ public class BoltActionRifleModel implements IOverrideModel
         Vec3 boltRotations = Vec3.ZERO;
         Vec3 boltRotOffset = new Vec3(0, -4.15, 0);
         
+        Vec3 bulletTranslations = Vec3.ZERO;
+        Vec3 bulletRotations = Vec3.ZERO;
+        Vec3 bulletRotOffset = Vec3.ZERO;
+        
+        Vec3 magTranslations = Vec3.ZERO;
+        
         if(isPlayer && correctContext && !disableAnimations)
         {
         	try {
@@ -84,6 +93,12 @@ public class BoltActionRifleModel implements IOverrideModel
     				
         			boltTranslations = GunAnimationHelper.getSmartAnimationTrans(stack, player, partialTicks, "bolt");
         	        boltRotations = GunAnimationHelper.getSmartAnimationRot(stack, player, partialTicks, "bolt");
+        			
+        	        bulletTranslations = GunAnimationHelper.getSmartAnimationTrans(stack, player, partialTicks, "bullet");
+        	        bulletRotations = GunAnimationHelper.getSmartAnimationRot(stack, player, partialTicks, "bullet");
+        	        bulletRotOffset = GunAnimationHelper.getSmartAnimationRotOffset(stack, player, partialTicks, "bullet");
+        			
+        	        magTranslations = GunAnimationHelper.getSmartAnimationTrans(stack, player, partialTicks, "magazine");
 
         	    	if(!GunAnimationHelper.hasAnimation("fire", stack) && GunAnimationHelper.getSmartAnimationType(stack, player, partialTicks)=="fire")
         	    	useFallbackAnimation = true;
@@ -164,6 +179,27 @@ public class BoltActionRifleModel implements IOverrideModel
         RenderUtil.renderModel(SpecialModels.BOLT_ACTION_RIFLE_CHAMBER.getModel(), transformType, null, stack, parent, poseStack, buffer, light, overlay);
 		// Pop pose to compile everything in the render matrix.
         poseStack.popPose();
+        
+        // Rifle bullet element, which is only used during custom reload animations.
+        if(!disableAnimations && !useFallbackAnimation)
+        {
+    		// Push pose so we can make do transformations without affecting the models above.
+            poseStack.pushPose();
+            // Initial translation to the starting position.
+            poseStack.translate(0.0, -4.15*0.0625, 3.1*0.0625);
+            // Apply the transformations
+            if(isPlayer && isFirstPerson)
+            {
+            	if(bulletTranslations!=Vec3.ZERO)
+                	poseStack.translate(bulletTranslations.x*0.0625, bulletTranslations.y*0.0625, bulletTranslations.z*0.0625);
+                if(bulletRotations!=Vec3.ZERO)
+                    GunAnimationHelper.rotateAroundOffset(poseStack, bulletRotations, bulletRotOffset);
+        	}
+    		// Render the model.
+            RenderUtil.renderModel(SpecialModels.BOLT_ACTION_RIFLE_BULLET.getModel(), transformType, null, stack, parent, poseStack, buffer, light, overlay);
+    		// Pop pose to compile everything in the render matrix.
+            poseStack.popPose();
+        }
     }
     
     //NBT fetch code for skin variants - ported from the "hasAmmo" function under common/Gun.java
@@ -171,5 +207,24 @@ public class BoltActionRifleModel implements IOverrideModel
     {
         CompoundTag tag = gunStack.getOrCreateTag();
         return tag.getInt("CustomModelData");
+    }
+    
+    //Code check for whether a bullet should be rendered.
+    public boolean shouldRenderBullet(ItemStack gunStack, int bullet)
+    {
+        CompoundTag tag = gunStack.getOrCreateTag();
+        if(!disableAnimations)
+        try {
+        	float progress = (ReloadHandler.get().getReloadTimer()>=0.8 ? GunRenderingHandler.get().getReloadDeltaTime(gunStack) : 0);
+        	boolean hasBullet = (Gun.hasInfiniteAmmo(gunStack) || (tag.getInt("AmmoCount") >= bullet));
+        	if ((hasBullet && GunAnimationHelper.getAnimationValue("reload", gunStack, progress, "bullets", "hideBullets")<=0)
+        	|| (GunAnimationHelper.getAnimationValue("reload", gunStack, progress, "bullets", "forceShowBullets")>=1))
+        	return true;
+        	else
+        	return false;
+		}
+		catch(Error ignored) {disableAnimations = true;} catch(Exception ignored) {disableAnimations = true;}
+        
+        return (Gun.hasInfiniteAmmo(gunStack) || (tag.getInt("AmmoCount") >= bullet));
     }
 }

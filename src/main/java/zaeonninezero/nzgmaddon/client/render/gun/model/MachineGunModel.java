@@ -3,19 +3,26 @@ package zaeonninezero.nzgmaddon.client.render.gun.model;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Vector3f;
 import com.mrcrayfish.guns.common.Gun;
+import com.mrcrayfish.guns.init.ModSyncedDataKeys;
 import com.mrcrayfish.guns.GunMod;
 import com.mrcrayfish.guns.client.GunModel;
+import com.mrcrayfish.guns.client.handler.GunRenderingHandler;
+import com.mrcrayfish.guns.client.handler.ReloadHandler;
+
 import zaeonninezero.nzgmaddon.client.SpecialModels;
 import com.mrcrayfish.guns.client.render.gun.IOverrideModel;
 import com.mrcrayfish.guns.client.util.GunAnimationHelper;
 import com.mrcrayfish.guns.client.util.RenderUtil;
 import com.mrcrayfish.guns.item.GunItem;
 import com.mrcrayfish.guns.item.attachment.IAttachment;
+import com.mrcrayfish.guns.util.GunCompositeStatHelper;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemCooldowns;
@@ -83,6 +90,8 @@ public class MachineGunModel implements IOverrideModel
         	        
         	        //handleRotations = GunAnimationHelper.getSmartAnimationRot(stack, player, partialTicks, "handle");
         	        //handleRotOffset = GunAnimationHelper.getSmartAnimationRotOffset(stack, player, partialTicks, "handle");
+        	        
+        	        bulletMovement = (float) GunAnimationHelper.getSmartAnimationTrans(stack, player, partialTicks, "bullets").x;
         		}
 	    		catch(NoClassDefFoundError ignored) {
 	            	disableAnimations = true;
@@ -119,9 +128,10 @@ public class MachineGunModel implements IOverrideModel
             float cooldown_f = Math.min(Math.max(cooldown_e*intensity2,0),1);
             
             boltTranslations = boltTranslations.add(0, 0, cooldown_d * 2.3);
-            bulletMovement = cooldown_f;
-            if (disableAnimations)
-            handleRotations = new Vec3(0,0,cooldown_f*12);
+            bulletMovement = Math.max(bulletMovement,cooldown_f);
+            //if (disableAnimations)
+            //handleRotations = new Vec3(0,0,cooldown_f*8);
+            handleRotations = handleRotations.add(0,0,cooldown_f*8);
         }
         
 
@@ -134,23 +144,23 @@ public class MachineGunModel implements IOverrideModel
         RenderUtil.renderModel(SpecialModels.MACHINE_GUN_BOLT.getModel(), transformType, null, stack, parent, poseStack, buffer, light, overlay);
 		// Pop pose to compile everything in the render matrix.
         poseStack.popPose();
-		
-		
-		// Machine Gun Bullets. The bullets move to simulate feeding the belt.
-        CompoundTag tag = stack.getOrCreateTag();
+        
         
 		// MG Bullet 1.
-        if (Gun.hasInfiniteAmmo(stack) || tag.getInt("AmmoCount") >= 5)
+        if (shouldRenderBullet(stack, 5))
         {
         poseStack.pushPose();
 		// Transformations
-        if(isPlayer && isFirstPerson && !disableAnimations)
+        if(isPlayer && isFirstPerson)
         {
             poseStack.translate(0, (bulletMovement * -0.48) * 0.0625, 0);
-        	if(magTranslations!=Vec3.ZERO)
-        	poseStack.translate(magTranslations.x*0.0625, magTranslations.y*0.0625, magTranslations.z*0.0625);
-        	if(magRotations!=Vec3.ZERO)
-               GunAnimationHelper.rotateAroundOffset(poseStack, magRotations, magRotOffset);
+            if(!disableAnimations)
+            {
+	        	if(magTranslations!=Vec3.ZERO)
+	        	poseStack.translate(magTranslations.x*0.0625, magTranslations.y*0.0625, magTranslations.z*0.0625);
+	        	if(magRotations!=Vec3.ZERO)
+	               GunAnimationHelper.rotateAroundOffset(poseStack, magRotations, magRotOffset);
+            }
     	}
 		// Render
         RenderUtil.renderModel(SpecialModels.MACHINE_GUN_BULLET1.getModel(), transformType, null, stack, parent, poseStack, buffer, light, overlay);
@@ -159,17 +169,20 @@ public class MachineGunModel implements IOverrideModel
     	}
 		
 		// MG Bullet 2.
-        if (Gun.hasInfiniteAmmo(stack) || tag.getInt("AmmoCount") >= 4)
+        if (shouldRenderBullet(stack, 4))
         {
         poseStack.pushPose();
 		// Transformations
-        if(isPlayer && isFirstPerson && !disableAnimations)
+        if(isPlayer && isFirstPerson)
         {
             poseStack.translate((bulletMovement * -0.041) * 0.0625, (bulletMovement * -0.475) * 0.0625, 0);
-        	if(magTranslations!=Vec3.ZERO)
-        	poseStack.translate(magTranslations.x*0.0625, magTranslations.y*0.0625, magTranslations.z*0.0625);
-        	if(magRotations!=Vec3.ZERO)
-               GunAnimationHelper.rotateAroundOffset(poseStack, magRotations, magRotOffset);
+            if(!disableAnimations)
+            {
+	        	if(magTranslations!=Vec3.ZERO)
+	        	poseStack.translate(magTranslations.x*0.0625, magTranslations.y*0.0625, magTranslations.z*0.0625);
+	        	if(magRotations!=Vec3.ZERO)
+	               GunAnimationHelper.rotateAroundOffset(poseStack, magRotations, magRotOffset);
+        	}
     	}
 		// Render
         RenderUtil.renderModel(SpecialModels.MACHINE_GUN_BULLET2.getModel(), transformType, null, stack, parent, poseStack, buffer, light, overlay);
@@ -178,17 +191,20 @@ public class MachineGunModel implements IOverrideModel
         }
 		
 		// MG Bullet 3.
-        if (Gun.hasInfiniteAmmo(stack) || tag.getInt("AmmoCount") >= 3)
+        if (shouldRenderBullet(stack, 3))
         {
         poseStack.pushPose();
 		// Transformations
-        if(isPlayer && isFirstPerson && !disableAnimations)
+        if(isPlayer && isFirstPerson)
         {
-            poseStack.translate((bulletMovement * -0.1) * 0.0625, (bulletMovement * -0.47) * 0.0625, 0);
-        	if(magTranslations!=Vec3.ZERO)
-        	poseStack.translate(magTranslations.x*0.0625, magTranslations.y*0.0625, magTranslations.z*0.0625);
-        	if(magRotations!=Vec3.ZERO)
-               GunAnimationHelper.rotateAroundOffset(poseStack, magRotations, magRotOffset);
+            if(!disableAnimations)
+            {
+	            poseStack.translate((bulletMovement * -0.1) * 0.0625, (bulletMovement * -0.47) * 0.0625, 0);
+	        	if(magTranslations!=Vec3.ZERO)
+	        	poseStack.translate(magTranslations.x*0.0625, magTranslations.y*0.0625, magTranslations.z*0.0625);
+	        	if(magRotations!=Vec3.ZERO)
+	               GunAnimationHelper.rotateAroundOffset(poseStack, magRotations, magRotOffset);
+            }
     	}
 		// Render
         RenderUtil.renderModel(SpecialModels.MACHINE_GUN_BULLET3.getModel(), transformType, null, stack, parent, poseStack, buffer, light, overlay);
@@ -197,17 +213,20 @@ public class MachineGunModel implements IOverrideModel
     	}
 		
 		// MG Bullet 4.
-        if (Gun.hasInfiniteAmmo(stack) || tag.getInt("AmmoCount") >= 2)
+        if (shouldRenderBullet(stack, 2))
         {
         poseStack.pushPose();
 		// Transformations
-        if(isPlayer && isFirstPerson && !disableAnimations)
+        if(isPlayer && isFirstPerson)
         {
             poseStack.translate((bulletMovement * -0.24) * 0.0625, (bulletMovement * -0.47) * 0.0625, 0);
-        	if(magTranslations!=Vec3.ZERO)
-        	poseStack.translate(magTranslations.x*0.0625, magTranslations.y*0.0625, magTranslations.z*0.0625);
-        	if(magRotations!=Vec3.ZERO)
-               GunAnimationHelper.rotateAroundOffset(poseStack, magRotations, magRotOffset);
+            if(!disableAnimations)
+            {
+	        	if(magTranslations!=Vec3.ZERO)
+	        	poseStack.translate(magTranslations.x*0.0625, magTranslations.y*0.0625, magTranslations.z*0.0625);
+	        	if(magRotations!=Vec3.ZERO)
+	               GunAnimationHelper.rotateAroundOffset(poseStack, magRotations, magRotOffset);
+            }
     	}
 		// Render
         RenderUtil.renderModel(SpecialModels.MACHINE_GUN_BULLET4.getModel(), transformType, null, stack, parent, poseStack, buffer, light, overlay);
@@ -216,17 +235,20 @@ public class MachineGunModel implements IOverrideModel
         }
 		
 		// MG Bullet 5.
-        if (Gun.hasInfiniteAmmo(stack) || tag.getInt("AmmoCount") >= 1)
+        if (shouldRenderBullet(stack, 1))
         {
         poseStack.pushPose();
 		// Transformations
-        if(isPlayer && isFirstPerson && !disableAnimations)
+        if(isPlayer && isFirstPerson)
         {
             poseStack.translate((bulletMovement * -0.5) * 0.0625, (bulletMovement * -0.18) * 0.0625, 0);
-        	if(magTranslations!=Vec3.ZERO)
-        	poseStack.translate(magTranslations.x*0.0625, magTranslations.y*0.0625, magTranslations.z*0.0625);
-        	if(magRotations!=Vec3.ZERO)
-               GunAnimationHelper.rotateAroundOffset(poseStack, magRotations, magRotOffset);
+            if(!disableAnimations)
+            {
+	        	if(magTranslations!=Vec3.ZERO)
+	        	poseStack.translate(magTranslations.x*0.0625, magTranslations.y*0.0625, magTranslations.z*0.0625);
+	        	if(magRotations!=Vec3.ZERO)
+	               GunAnimationHelper.rotateAroundOffset(poseStack, magRotations, magRotOffset);
+        	}
     	}
 		// Render
         RenderUtil.renderModel(SpecialModels.MACHINE_GUN_BULLET5.getModel(), transformType, null, stack, parent, poseStack, buffer, light, overlay);
@@ -273,6 +295,25 @@ public class MachineGunModel implements IOverrideModel
 		// POP POP
         poseStack.popPose();
         
-        // Phew! We're all done here.
+        // Phew! That was a lot of stuff to render.
+    }
+    
+    //Code check for whether a bullet should be rendered.
+    public boolean shouldRenderBullet(ItemStack gunStack, int bullet)
+    {
+        CompoundTag tag = gunStack.getOrCreateTag();
+        if(!disableAnimations)
+        try {
+        	float progress = (ReloadHandler.get().getReloadTimer()>=0.8 ? GunRenderingHandler.get().getReloadDeltaTime(gunStack) : 0);
+        	boolean hasBullet = (Gun.hasInfiniteAmmo(gunStack) || (tag.getInt("AmmoCount") >= bullet));
+        	if ((hasBullet && GunAnimationHelper.getAnimationValue("reload", gunStack, progress, "bullets", "hideBullets")<=0)
+        	|| (GunAnimationHelper.getAnimationValue("reload", gunStack, progress, "bullets", "forceShowBullets")>=1))
+        	return true;
+        	else
+        	return false;
+		}
+		catch(Error ignored) {disableAnimations = true;} catch(Exception ignored) {disableAnimations = true;}
+        
+        return (Gun.hasInfiniteAmmo(gunStack) || (tag.getInt("AmmoCount") >= bullet));
     }
 }

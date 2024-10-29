@@ -16,6 +16,10 @@ public enum SpecialModels
     AUTOMATIC_SNIPER_RIFLE("gun/automatic_sniper_rifle"),
     HUNTING_RIFLE("gun/hunting_rifle"),
 
+    BASIC_BULLET_LOADED("bullets/basic_bullet_loaded"),
+    MEDIUM_BULLET_LOADED("bullets/medium_bullet_loaded"),
+    ADVANCED_BULLET_LOADED("bullets/advanced_bullet_loaded"),
+    SG_SHELL_LOADED("bullets/shell_loaded"),
 	
     REVOLVER_BASE("revolver_base"),
     REVOLVER_RAIL("revolver_rail"),
@@ -38,6 +42,8 @@ public enum SpecialModels
     MICRO_SMG_RAIL("micro_smg_rail"),
     MICRO_SMG_CHARGEHANDLE("micro_smg_charge_handle"),
     MICRO_SMG_MAGAZINE("micro_smg_magazine"),
+    MICRO_SMG_LIGHT_MAG("micro_smg_light_mag"),
+    MICRO_SMG_EXTENDED_MAG("micro_smg_extended_mag"),
 	
     SUBMACHINE_GUN_BASE("submachine_gun_base"),
     SUBMACHINE_GUN_BASE_1("submachine_gun_base_1"),
@@ -55,6 +61,7 @@ public enum SpecialModels
     RAPID_SMG_SIGHTS("rapid_smg_sights"),
     RAPID_SMG_BOLT_HANDLE("rapid_smg_bolt_handle"),
     RAPID_SMG_MAGAZINE("rapid_smg_magazine"),
+    RAPID_SMG_LIGHT_MAG("rapid_smg_light_magazine"),
 	
     PUMP_SHOTGUN_BASE("pump_shotgun_base"),
     PUMP_SHOTGUN_BASE_1("pump_shotgun_base_1"),
@@ -67,6 +74,7 @@ public enum SpecialModels
     AUTOMATIC_SHOTGUN_BASE("automatic_shotgun_base"),
     AUTOMATIC_SHOTGUN_SIGHTS("automatic_shotgun_sights"),
     AUTOMATIC_SHOTGUN_MAGAZINE("automatic_shotgun_drum"),
+    AUTOMATIC_SHOTGUN_LIGHT_MAGAZINE("automatic_shotgun_light_mag"),
     
     HEAVY_AR_BASE("heavy_ar_base"),
     HEAVY_AR_BASE_1("heavy_ar_base_1"),
@@ -108,6 +116,10 @@ public enum SpecialModels
     INFANTRY_RIFLE_LIGHT_MAG("infantry_rifle_light_mag"),
     INFANTRY_RIFLE_EXTENDED_MAG("infantry_rifle_extended_mag"),
     
+    HUNTING_RIFLE_BASE("hunting_rifle_base"),
+    HUNTING_RIFLE_BREECH("hunting_rifle_breech"),
+    HUNTING_RIFLE_SIGHTS("hunting_rifle_rear_sight"),
+    
     BOLT_ACTION_RIFLE_BASE("bolt_action_rifle_base"),
     BOLT_ACTION_RIFLE_BASE_1("bolt_action_rifle_base_1"),
     BOLT_ACTION_RIFLE_BASE_2("bolt_action_rifle_base_2"),
@@ -115,6 +127,7 @@ public enum SpecialModels
     BOLT_ACTION_RIFLE_RAIL("bolt_action_rifle_rail"),
     BOLT_ACTION_RIFLE_CHAMBER("bolt_action_rifle_bolt1"),
     BOLT_ACTION_RIFLE_BOLT("bolt_action_rifle_bolt2"),
+    BOLT_ACTION_RIFLE_BULLET("bolt_action_rifle_bullet"),
 	
     SNIPER_RIFLE_BASE("sniper_rifle_base"),
     SNIPER_RIFLE_SIGHTS("sniper_rifle_sights"),

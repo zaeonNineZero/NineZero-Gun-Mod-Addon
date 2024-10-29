@@ -59,7 +59,7 @@ public class RevolverModel implements IOverrideModel
         boolean correctContext = (transformType.firstPerson() || transformType == ItemTransforms.TransformType.THIRD_PERSON_RIGHT_HAND || transformType == ItemTransforms.TransformType.THIRD_PERSON_LEFT_HAND);
 
         Vec3 cylinderRotations = Vec3.ZERO;
-        Vec3 cylinderRotOffset = new Vec3(0, -4.42, 0);
+        Vec3 cylinderRotOffset = new Vec3(0, -4.43, 0);
         
         Vec3 swingRotations = Vec3.ZERO;
         Vec3 swingRotOffset = Vec3.ZERO;
