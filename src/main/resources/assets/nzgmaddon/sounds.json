@@ -410,7 +410,8 @@
     "subtitle":"subtitle.cgm.fire",
     "sounds": [
       "nzgmaddon:item/bullpup_rifle/fire",
-      "nzgmaddon:item/bullpup_rifle/fire2"
+      "nzgmaddon:item/bullpup_rifle/fire2",
+      "nzgmaddon:item/bullpup_rifle/fire3"
     ]
   },
 "item.bullpup_rifle.silenced_fire": {
@@ -421,12 +422,20 @@
     "subtitle":"subtitle.cgm.enchanted_fire",
 	"sounds": [
       "nzgmaddon:item/bullpup_rifle/enchanted_fire",
-      "nzgmaddon:item/bullpup_rifle/enchanted_fire2"
+      "nzgmaddon:item/bullpup_rifle/enchanted_fire2",
+      "nzgmaddon:item/bullpup_rifle/enchanted_fire3"
     ]
   },
 "item.bullpup_rifle.cock": {
     "subtitle":"subtitle.cgm.cock",
-    "sounds": [{"name":"cgm:item/assault_rifle/cock"}]
+    "sounds": [{"name":"nzgmaddon:item/bullpup_rifle/cock"}]
+  },
+"item.bullpup_rifle.mag_out": {
+    "sounds": [{"name":"nzgmaddon:item/bullpup_rifle/mag_out"}]
+  },
+"item.bullpup_rifle.mag_in": {
+    "subtitle":"subtitle.cgm.reload",
+    "sounds": [{"name":"nzgmaddon:item/bullpup_rifle/mag_in"}]
   },
   
 "item.machine_gun.fire": {
