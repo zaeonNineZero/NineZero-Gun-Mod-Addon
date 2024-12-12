@@ -78,6 +78,8 @@ public enum SpecialModels
     
     HEAVY_AR_BASE("heavy_ar_base"),
     HEAVY_AR_BASE_1("heavy_ar_base_1"),
+    HEAVY_AR_BOTTOM_RAIL("heavy_ar_bottom_rail"),
+    HEAVY_AR_FORWARD_TOP_RAIL("heavy_ar_forward_top_rail"),
     HEAVY_AR_BOLT_HANDLE("heavy_ar_bolt_handle"),
     HEAVY_AR_MAGAZINE("heavy_ar_magazine"),
     HEAVY_AR_LIGHT_MAG("heavy_ar_light_mag"),

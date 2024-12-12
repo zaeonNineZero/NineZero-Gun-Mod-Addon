@@ -41,11 +41,24 @@ public class HeavyAssaultRifleModel implements IOverrideModel
     {
 		// Select the Baked Model we'll be rendering, based on the value of the CustomModelData tag.
         BakedModel bakedModel = SpecialModels.HEAVY_AR_BASE.getModel();
-        if (getVariant(stack) == 1)
+        if (getVariant(stack) == 1 || getVariant(stack, "BaseVariant") == 1)
         bakedModel = SpecialModels.HEAVY_AR_BASE_1.getModel();
         
         // Render the BakedModel we selected.
         Minecraft.getInstance().getItemRenderer().render(stack, ItemTransforms.TransformType.NONE, false, poseStack, buffer, light, overlay, GunModel.wrap(bakedModel));
+
+		// Bottom rail element, which is only rendered if a grip is attached, or if BaseVariant or CustomModelData is equal to 1.
+		ItemStack attachmentStack = Gun.getAttachment(IAttachment.Type.UNDER_BARREL, stack);
+        if((getVariant(stack) == 1 || getVariant(stack, "BaseVariant") == 1 || getVariant(stack, "ExtraRails") == 1) || !attachmentStack.isEmpty())
+		{
+            RenderUtil.renderModel(SpecialModels.HEAVY_AR_BOTTOM_RAIL.getModel(), transformType, null, stack, parent, poseStack, buffer, light, overlay);
+		}
+
+		// Forward top rail element, which is only rendered if ForwardTopRail or CustomModelData is equal to 1.
+        if(getVariant(stack) == 1 || getVariant(stack, "ExtraRails") == 1)
+		{
+            RenderUtil.renderModel(SpecialModels.HEAVY_AR_FORWARD_TOP_RAIL.getModel(), transformType, null, stack, parent, poseStack, buffer, light, overlay);
+		}
 
 
         // Special animated segment for compat with the CGM Expanded fork.
@@ -146,5 +159,12 @@ public class HeavyAssaultRifleModel implements IOverrideModel
     {
         CompoundTag tag = gunStack.getOrCreateTag();
         return tag.getInt("CustomModelData");
+    }
+    
+    //NBT fetch code for skin variants - ported from the "hasAmmo" function under common/Gun.java
+    public static int getVariant(ItemStack gunStack, String tag_name)
+    {
+        CompoundTag tag = gunStack.getOrCreateTag();
+        return tag.getInt(tag_name);
     }
 }

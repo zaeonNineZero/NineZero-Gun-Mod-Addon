@@ -102,13 +102,17 @@
     "sounds": [
       "nzgmaddon:item/heavy_revolver/fire",
       "nzgmaddon:item/heavy_revolver/fire2",
-      "nzgmaddon:item/heavy_revolver/fire3"
+      "nzgmaddon:item/heavy_revolver/fire3",
+      "nzgmaddon:item/heavy_revolver/fire4"
     ]
   },
 "item.heavy_revolver.enchanted_fire": {
     "subtitle":"subtitle.cgm.enchanted_fire",
     "sounds": [
-      "nzgmaddon:item/heavy_revolver/enchanted_fire"
+      "nzgmaddon:item/heavy_revolver/enchanted_fire",
+      "nzgmaddon:item/heavy_revolver/enchanted_fire2",
+      "nzgmaddon:item/heavy_revolver/enchanted_fire3",
+      "nzgmaddon:item/heavy_revolver/enchanted_fire4"
     ]
   },
 "item.heavy_revolver.silenced_fire": {
@@ -361,6 +365,13 @@
       "nzgmaddon:item/heavy_ar/enchanted_fire3",
       "nzgmaddon:item/heavy_ar/enchanted_fire4"
     ]
+  },
+"item.heavy_ar.mag_out": {
+    "sounds": [{"name":"nzgmaddon:item/heavy_ar/mag_out"}]
+  },
+"item.heavy_ar.mag_in": {
+    "subtitle":"subtitle.cgm.reload",
+    "sounds": [{"name":"nzgmaddon:item/heavy_ar/mag_in"}]
   },
 "item.heavy_ar.cock": {
     "subtitle":"subtitle.cgm.cock",
