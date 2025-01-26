@@ -1,6 +1,12 @@
 # Changelog (1.18.2 Releases)
 
 
+### 1.4.5 (1/26/25)
+Much overdue hotfix from December 2024!
+
+* 1.18.2 Hotfix: Resolved issue #32 -- the class "init\initSounds" was incorrectly calling for "item/bullpup" instead of "item/bullpup_rifle", causing log spam and significant game lag.
+
+
 ### 1.4.4 (5/22/23)
 * Added a custom Creative Mode inventory tab for NZGE! (Localization keys for the creative tab are all in English pending new translations)
 * Fixed missing rail model and accordingly updated the base model for the Infantry Rifle.
